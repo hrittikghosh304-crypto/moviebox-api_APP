@@ -7,7 +7,12 @@ app = Flask(__name__)
 
 # Helper to run async code in a synchronous Flask route
 def run_async(coro):
-    return asyncio.run(coro)
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
 
 @app.route('/', methods=['GET'])
 def index():
