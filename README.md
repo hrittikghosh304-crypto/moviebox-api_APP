@@ -12,9 +12,26 @@ Search, discover, download, and stream movies & TV series with subtitles
 [![Downloads](https://pepy.tech/badge/moviebox-api)](https://pepy.tech/project/moviebox-api)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-[Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Usage](#usage) • [Documentation](#documentation)
+[Features](#features) • [Installation](#installation) • [Quick Start](#quick-start) • [Usage](#usage) • [Documentation](#documentation) • [Deployment](#deployment)
 
 </div>
+
+## Deployment
+
+### Deploy to Render
+
+You can deploy this API as a web service on Render with a single click:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/render-api-deploy?repo=https://github.com/hrittikghosh304-crypto/moviebox-api_APP)
+
+### REST API Endpoints
+
+Once deployed, the following endpoints are available:
+
+- `GET /`: Health check and endpoint list.
+- `GET /api/search?q=QUERY`: Search for movies and TV series.
+- `GET /api/movie?id=DETAIL_PATH`: Get details for a specific movie (use `detailPath` from search results).
+
 
 
 

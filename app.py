@@ -1,20 +1,24 @@
-import asyncio
 from flask import Flask, request, jsonify
 from moviebox_api.v2.core import Search, MovieDetails, TVSeriesDetails
+from moviebox_api.v2.requests import Session
+import asyncio
 
 app = Flask(__name__)
 
-# moviebox-api is primarily async, so we'll run it in a loop
-def run_async(coroutine):
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    result = loop.run_until_complete(coroutine)
-    loop.close()
-    return result
+# Helper to run async code in a synchronous Flask route
+def run_async(coro):
+    return asyncio.run(coro)
 
 @app.route('/', methods=['GET'])
 def index():
-    return jsonify({"message": "Moviebox API is running."})
+    return jsonify({
+        "message": "Moviebox API is running.",
+        "status": "online",
+        "endpoints": {
+            "search": "/api/search?q=movie_title",
+            "movie": "/api/movie?id=movie_path"
+        }
+    })
 
 @app.route('/api/search', methods=['GET'])
 def search_api():
@@ -23,13 +27,13 @@ def search_api():
         return jsonify({"error": "Query parameter 'q' is required"}), 400
     
     try:
-        search_client = Search()
-        # Ensure we properly await the async get_content_model
+        session = Session()
+        search_client = Search(session=session)
+        # In v2, Search.get_content_model takes query as argument if not set in init
+        # or uses the one from init. v1 init takes query. 
+        # Let's check v2 core again to be sure.
         results_model = run_async(search_client.get_content_model(query))
         
-        # We can dump the result model to a dict to serialize it
-        # pydantic models have `.model_dump()` or `.dict()` depending on version. 
-        # For pydantic>=2.x it's model_dump()
         try:
             data = results_model.model_dump()
         except AttributeError:
@@ -41,14 +45,14 @@ def search_api():
 
 @app.route('/api/movie', methods=['GET'])
 def movie_details():
-    movie_id = request.args.get('id')
-    if not movie_id:
+    movie_path = request.args.get('id') # Usually the detailPath from search
+    if not movie_path:
         return jsonify({"error": "Query parameter 'id' is required"}), 400
 
     try:
-        # Usually from search, detailPath looks like `/movie/1234`
-        movie_client = MovieDetails(session=None)
-        movie_model = run_async(movie_client.get_content_model(movie_id))
+        session = Session()
+        movie_client = MovieDetails(session=session)
+        movie_model = run_async(movie_client.get_content_model(movie_path))
         
         try:
             data = movie_model.model_dump()
@@ -60,5 +64,4 @@ def movie_details():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # You can specify host to 0.0.0.0 for external access
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000)
